@@ -25,9 +25,12 @@ jobs:
       - name: Launcher
         shell: cmd
         run: |
-          fltmc >nul 2>&1 || exit /b 1
+          fltmc >nul 2>&1
+          if errorlevel 1 (echo ::error::runner is not elevated & exit /b 1)
           call Frame-Dongle-Fix.cmd lib
-          if errorlevel 1 exit /b 1
-          call Frame-Dongle-Fix.cmd status
-          if errorlevel 2 exit /b 1
-          if not errorlevel 1 exit /b 1
+          if errorlevel 1 (echo ::error::launcher lib mode failed & exit /b 1)
+          call Frame-Dongle-Fix.cmd status > status.txt
+          type status.txt
+          findstr /c:"No adapter matching" status.txt
+          if errorlevel 1 (echo ::error::launcher did not reach the PowerShell part & exit /b 1)
+          exit /b 0
