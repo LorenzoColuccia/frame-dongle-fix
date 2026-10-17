@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pwsh -NoProfile -File tests/run-tests.ps1
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Windows PowerShell 5.1
+        shell: powershell
+        run: ./tests/run-tests.ps1
+      - name: PowerShell 7
+        shell: pwsh
+        run: ./tests/run-tests.ps1
+      - name: Launcher
+        shell: cmd
+        run: |
+          fltmc >nul 2>&1 || exit /b 1
+          call Frame-Dongle-Fix.cmd lib
+          if errorlevel 1 exit /b 1
+          call Frame-Dongle-Fix.cmd status
+          if errorlevel 2 exit /b 1
+          if not errorlevel 1 exit /b 1
